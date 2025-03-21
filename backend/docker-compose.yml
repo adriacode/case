@@ -1,14 +1,40 @@
 services:
-  db:
-    image: mysql:latest
-    container_name: mysql_container
+  backend:
+    build:
+      context: ./  # O backend está na pasta backend, então o contexto é o diretório atual
+    ports:
+      - "3000:3000"  # Mapeia a porta 3000 do container para a 3000 da máquina
+    volumes:
+      - ./src:/app/src  # Volume para desenvolvimento
     environment:
-      MYSQL_ROOT_PASSWORD: senha123
-      MYSQL_DATABASE: investimentos
+      - NODE_ENV=development
+      - DB_HOST=mysql-db  # O backend se conecta ao banco pelo nome do serviço
+      - DB_PORT=3306  # Porta padrão do MySQL
+      - DB_USER=root  # Usuário do banco de dados
+      - DB_PASSWORD=root  # Senha do banco de dados
+      - DB_NAME=investimento  # Nome do banco de dados
+    depends_on:
+      - mysql-db  # O backend depende do banco de dados
+
+  frontend:
+    build:
+      context: ../frontend  # Caminho relativo para o diretório do frontend
+    ports:
+      - "3001:3001"  # Mapeia a porta 3001 do container para a 3001 da máquina
+    volumes:
+      - ../frontend/src:/app/src  # Volume para desenvolvimento
+    depends_on:
+      - backend  # O frontend depende do backend para funcionar
+
+  mysql-db:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: investimento
     ports:
       - "3306:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - db_data:/var/lib/mysql  # Volume persistente para o banco de dados
 
 volumes:
-  mysql_data:
+  db_data:  # Define o volume persistente para o banco de dados
